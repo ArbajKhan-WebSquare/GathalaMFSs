@@ -1,0 +1,662 @@
+@{
+    ViewData["Title"] = "Bulk Upload Students";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bulk Upload Students</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        :root {
+            --bg: #f0f2f8;
+            --card: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            --accent: #0ea5e9;
+            --text-head: #0f172a;
+            --text-body: #334155;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --shadow-md: 0 4px 20px rgba(15,23,42,0.08), 0 1px 4px rgba(15,23,42,0.04);
+            --radius: 14px;
+            --radius-sm: 8px;
+            --success: #10b981;
+            --success-light: #d1fae5;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-body);
+            min-height: 100vh;
+        }
+
+        .bu-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+        }
+
+        /* Header */
+        .bu-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .bu-header-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.30);
+        }
+
+        .bu-header-icon svg {
+            width: 26px;
+            height: 26px;
+            fill: #fff;
+        }
+
+        .bu-heading {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 800;
+            color: var(--text-head);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .bu-heading span {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-family: 'DM Sans', sans-serif;
+            margin-bottom: 2px;
+        }
+
+        /* Card */
+        .bu-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+        }
+
+        /* Toolbar */
+        .bu-toolbar {
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, #fafbff 0%, #f8faff 100%);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .bu-download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--primary);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.28);
+            text-decoration: none;
+        }
+
+        .bu-download-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .bu-download-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37,99,235,0.32);
+        }
+
+        .bu-divider {
+            width: 1px;
+            height: 32px;
+            background: var(--border);
+        }
+
+        .bu-upload-section {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .bu-file-wrap {
+            position: relative;
+        }
+
+        .bu-file-input {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .bu-file-display {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            background: #fff;
+            transition: border-color 0.2s, background 0.2s;
+            cursor: pointer;
+            min-height: 48px;
+        }
+
+        .bu-file-wrap:hover .bu-file-display,
+        .bu-file-wrap:focus-within .bu-file-display {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .bu-file-display svg {
+            width: 20px;
+            height: 20px;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .bu-file-text {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .bu-file-name {
+            font-size: 0.875rem;
+            color: var(--text-body);
+            font-weight: 500;
+        }
+
+        /* Preview Card */
+        .bu-preview-section {
+            padding: 28px;
+            display: none;
+        }
+
+        .bu-preview-section.active {
+            display: block;
+        }
+
+        .bu-preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .bu-preview-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-head);
+        }
+
+        .bu-preview-stats {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .bu-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .bu-stat-item strong {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .bu-stat-item svg {
+            width: 18px;
+            height: 18px;
+            color: var(--accent);
+        }
+
+        .bu-action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .bu-confirm-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--success);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            box-shadow: 0 2px 8px rgba(16,185,129,0.28);
+        }
+
+        .bu-confirm-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .bu-confirm-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .bu-cancel-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #fff;
+            color: var(--text-body);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .bu-cancel-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        /* Preview Table */
+        .bu-table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+
+        .bu-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .bu-table thead th {
+            background: #f8faff;
+            padding: 12px 16px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .bu-table tbody td {
+            padding: 12px 16px;
+            font-size: 0.875rem;
+            color: var(--text-body);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .bu-table tbody tr:hover {
+            background: var(--primary-light);
+        }
+
+        .bu-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Loading */
+        .bu-loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            gap: 12px;
+            color: var(--text-muted);
+        }
+
+        .bu-loading.active {
+            display: flex;
+        }
+
+        .bu-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Alert */
+        .bu-alert {
+            display: none;
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+        }
+
+        .bu-alert.success {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--success-light);
+            color: #065f46;
+            border: 1px solid #34d399;
+        }
+
+        .bu-alert.error {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+        }
+
+        .bu-alert svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="bu-page">
+        <!-- Header -->
+        <div class="bu-header">
+            <div class="bu-header-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+            </div>
+            <div class="bu-heading">
+                <span>Student Management</span>
+                Bulk Upload Students
+            </div>
+        </div>
+
+        <!-- Alert -->
+        <div id="alertBox" class="bu-alert">
+            <i class="fa-solid fa-check-circle"></i>
+            <span id="alertMessage"></span>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bu-card">
+            <!-- Toolbar -->
+            <div class="bu-toolbar">
+                <a href="@Url.Action("DownloadTemplate", "Student")" class="bu-download-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download Template
+                </a>
+
+                <div class="bu-divider"></div>
+
+                <div class="bu-upload-section">
+                    <div class="bu-file-wrap">
+                        <input type="file" id="fileInput" class="bu-file-input" accept=".xlsx,.xls" />
+                        <div class="bu-file-display">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <span class="bu-file-text" id="fileText">Choose Excel file to upload</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loadingSection" class="bu-loading">
+                <div class="bu-spinner"></div>
+                <span>Processing file...</span>
+            </div>
+
+            <!-- Preview Section -->
+            <div id="previewSection" class="bu-preview-section">
+                <div class="bu-preview-header">
+                    <div class="bu-preview-title">File Preview</div>
+                    <div class="bu-preview-stats">
+                        <div class="bu-stat-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10 9 9 9 8 9"/>
+                            </svg>
+                            <strong id="recordCount">0</strong> Records
+                        </div>
+                    </div>
+                    <div class="bu-action-buttons">
+                        <button id="cancelBtn" class="bu-cancel-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                            Cancel
+                        </button>
+                        <button id="confirmBtn" class="bu-confirm-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Confirm Upload
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bu-table-scroll">
+                    <table class="bu-table">
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileText = document.getElementById('fileText');
+        const previewSection = document.getElementById('previewSection');
+        const loadingSection = document.getElementById('loadingSection');
+        const tableHead = document.getElementById('tableHead');
+        const tableBody = document.getElementById('tableBody');
+        const recordCount = document.getElementById('recordCount');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const alertBox = document.getElementById('alertBox');
+        const alertMessage = document.getElementById('alertMessage');
+
+        let currentFile = null;
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                fileText.textContent = file.name;
+                fileText.classList.add('bu-file-name');
+                currentFile = file;
+                previewFile(file);
+            }
+        });
+
+        async function previewFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            loadingSection.classList.add('active');
+            previewSection.classList.remove('active');
+
+            try {
+                const response = await fetch('/Student/PreviewUpload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                loadingSection.classList.remove('active');
+
+                if (result.success) {
+                    displayPreview(result.data);
+                    recordCount.textContent = result.count;
+                    previewSection.classList.add('active');
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                loadingSection.classList.remove('active');
+                showAlert('Error processing file', 'error');
+            }
+        }
+
+        function displayPreview(data) {
+            if (data.length === 0) return;
+
+            const headers = Object.keys(data[0]);
+            
+            // Build header row
+            let headerHtml = '<tr>';
+            headers.forEach(header => {
+                headerHtml += `<th>${header}</th>`;
+            });
+            headerHtml += '</tr>';
+            tableHead.innerHTML = headerHtml;
+
+            // Build body rows (max 10 rows for preview)
+            let bodyHtml = '';
+            data.slice(0, 10).forEach(row => {
+                bodyHtml += '<tr>';
+                headers.forEach(header => {
+                    bodyHtml += `<td>${row[header] || ''}</td>`;
+                });
+                bodyHtml += '</tr>';
+            });
+
+            if (data.length > 10) {
+                bodyHtml += `<tr><td colspan="${headers.length}" style="text-align:center; color:var(--text-muted);">... and ${data.length - 10} more records</td></tr>`;
+            }
+
+            tableBody.innerHTML = bodyHtml;
+        }
+
+        confirmBtn.addEventListener('click', async function() {
+            if (!currentFile) return;
+
+            const formData = new FormData();
+            formData.append('file', currentFile);
+
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<div class="bu-spinner" style="width:16px;height:16px;border-width:2px;"></div> Uploading...';
+
+            try {
+                const response = await fetch('/Student/ConfirmUpload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    previewSection.classList.remove('active');
+                    fileInput.value = '';
+                    fileText.textContent = 'Choose Excel file to upload';
+                    fileText.classList.remove('bu-file-name');
+                    currentFile = null;
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error uploading file', 'error');
+            }
+
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Confirm Upload
+            `;
+        });
+
+        cancelBtn.addEventListener('click', function() {
+            previewSection.classList.remove('active');
+            fileInput.value = '';
+            fileText.textContent = 'Choose Excel file to upload';
+            fileText.classList.remove('bu-file-name');
+            currentFile = null;
+        });
+
+        function showAlert(message, type) {
+            alertBox.className = `bu-alert ${type}`;
+            alertBox.querySelector('svg').className = type === 'success' ? 'fa-solid fa-check-circle' : 'fa-solid fa-exclamation-circle';
+            alertMessage.textContent = message;
+            
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

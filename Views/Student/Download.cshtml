@@ -1,0 +1,87 @@
+﻿@model GathalaMFS.Models.StudentDetail
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code</title>
+
+    <style>
+
+            @@page {
+                size: A4;
+                margin: 0;
+            }
+
+            html, body {
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-family: Arial, sans-serif;
+                background: #fff;
+            }
+
+            .a4-page {
+                width: 210mm;
+                height: 297mm;
+                display: flex;
+                margin-bottom:30rem;
+                margin-left:1rem;
+                justify-content: end;
+                align-items: start;
+                flex-direction: column;
+            }
+
+            img {
+                width: 150px;
+                height: 150px;
+            }
+
+            @@media print {
+
+                html, body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                body {
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+            }
+
+    </style>
+</head>
+<body>
+
+    <div class="a4-page">
+
+        <img src="data:image/png;base64,@ViewBag.QRCodeImage" />
+    </div>
+
+    <script>
+            window.onload = function () {
+
+                // open print dialog
+                window.print();
+
+                // optional auto close after print
+                window.onafterprint = function () {
+                    window.close();
+                };
+            };
+    </script>
+
+</body>
+</html>

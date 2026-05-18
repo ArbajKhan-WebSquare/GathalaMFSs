@@ -1,0 +1,1206 @@
+﻿@model List<ExcelFile>
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Excel Manager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg: #f0f2f8;
+            --card: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            --accent: #0ea5e9;
+            --text-head: #0f172a;
+            --text-body: #334155;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --shadow-md: 0 4px 20px rgba(15,23,42,0.08), 0 1px 4px rgba(15,23,42,0.04);
+            --shadow-lg: 0 20px 60px rgba(15,23,42,0.18);
+            --radius: 14px;
+            --radius-sm: 8px;
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text-body);
+            min-height: 100vh;
+            padding: 0 0 60px;
+        }
+
+        /* ── HEADER ── */
+        .page-header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+            .page-header .brand {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .brand-icon svg {
+                width: 20px;
+                height: 20px;
+                fill: #fff;
+            }
+
+        .brand-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-head);
+            letter-spacing: -0.3px;
+        }
+
+        .brand-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-top: 1px;
+        }
+
+        .header-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid #bfdbfe;
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        /* ── MAIN CONTAINER ── */
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 36px 24px 0;
+        }
+
+        /* ── ACTION BAR ── */
+        .action-bar {
+            display: flex;
+            align-items: stretch;
+            gap: 16px;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+        }
+
+        /* Upload zone */
+        .upload-zone {
+            min-width: 260px;
+            background: var(--card);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 28px 32px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+            transition: border-color .2s, background .2s, box-shadow .2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .upload-zone:hover {
+                border-color: var(--primary);
+                background: var(--primary-light);
+                box-shadow: var(--shadow-md);
+            }
+
+            .upload-zone.drag-over {
+                border-color: var(--accent);
+                background: #f0f9ff;
+            }
+
+            .upload-zone input[type="file"] {
+                position: absolute;
+                inset: 0;
+                opacity: 0;
+                cursor: pointer;
+                width: 100%;
+                height: 100%;
+            }
+
+        .upload-icon-wrap {
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, var(--primary-light), #dbeafe);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #bfdbfe;
+        }
+
+            .upload-icon-wrap svg {
+                width: 26px;
+                height: 26px;
+            }
+
+        .upload-text h3 {
+            font-size: 0.97rem;
+            font-weight: 700;
+            color: var(--text-head);
+            margin-bottom: 3px;
+        }
+
+        .upload-text p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* Download template */
+        .template-card {
+            background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+            border-radius: 10px;
+            padding: 10px 21px;
+            width: 367px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 10px;
+            min-width: 210px;
+            box-shadow: 0 6px 24px rgba(37,99,235,0.25);
+            text-decoration: none;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+            .template-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 32px rgba(37,99,235,0.32);
+            }
+
+        .template-card-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.65);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .template-card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .template-card-icon {
+            width: 34px;
+            height: 34px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .template-card-icon svg {
+                width: 18px;
+                height: 18px;
+                fill: #fff;
+            }
+
+        /* ── SECTION HEADER ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-head);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: 50%;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .section-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0 0 28px;
+        }
+
+        /* ── GRID ── */
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 20px;
+        }
+
+        /* ── FILE CARD ── */
+        .file-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 22px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: var(--shadow-md);
+            transition: transform .2s, box-shadow .2s, border-color .2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .file-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(90deg, var(--primary), var(--accent));
+                opacity: 0;
+                transition: opacity .2s;
+            }
+
+            .file-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 28px rgba(15,23,42,0.12);
+                border-color: #bfdbfe;
+            }
+
+                .file-card:hover::before {
+                    opacity: 1;
+                }
+
+        .card-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .file-thumb {
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #bfdbfe;
+        }
+
+            .file-thumb svg {
+                width: 22px;
+                height: 22px;
+            }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 0.93rem;
+            font-weight: 700;
+            color: var(--text-head);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+
+        .file-ext {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 4px;
+            padding: 1px 7px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: .4px;
+            text-transform: uppercase;
+        }
+
+        .card-stats {
+            display: flex;
+            gap: 10px;
+        }
+
+        .stat-pill {
+            flex: 1;
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .stat-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-head);
+        }
+
+            .stat-value.accent {
+                color: var(--primary);
+            }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .card-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+            .card-date svg {
+                width: 13px;
+                height: 13px;
+            }
+
+        .preview-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid #bfdbfe;
+            border-radius: var(--radius-sm);
+            padding: 7px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background .2s, color .2s, border-color .2s;
+        }
+
+            .preview-btn:hover {
+                background: var(--primary);
+                color: #fff;
+                border-color: var(--primary);
+            }
+
+            .preview-btn svg {
+                width: 13px;
+                height: 13px;
+            }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center;
+            padding: 70px 20px;
+            background: var(--card);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+        }
+
+        .empty-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--primary-light);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+        }
+
+            .empty-icon svg {
+                width: 32px;
+                height: 32px;
+            }
+
+        .empty-state h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-head);
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* ════════════════════════════════════════
+                   MODAL OVERLAY
+                ════════════════════════════════════════ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(15,23,42,0.55);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: overlayIn .2s ease;
+        }
+
+            .modal-overlay.open {
+                display: flex;
+            }
+
+        @@keyframes overlayIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            background: var(--card);
+            border-radius: 18px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-lg);
+            animation: modalIn .25s cubic-bezier(.34,1.4,.64,1);
+            overflow: hidden;
+        }
+
+        @@keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(.94) translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* Modal header */
+        .modal-header {
+            padding: 22px 28px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .modal-header-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--primary-light), #dbeafe);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #bfdbfe;
+            flex-shrink: 0;
+        }
+
+            .modal-header-icon svg {
+                width: 22px;
+                height: 22px;
+            }
+
+        .modal-header-text {
+            flex: 1;
+        }
+
+        .modal-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-head);
+        }
+
+        .modal-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s;
+            flex-shrink: 0;
+        }
+
+            .modal-close:hover {
+                background: #fee2e2;
+                border-color: #fca5a5;
+            }
+
+            .modal-close svg {
+                width: 16px;
+                height: 16px;
+                stroke: var(--text-muted);
+            }
+
+            .modal-close:hover svg {
+                stroke: var(--danger);
+            }
+
+        /* Summary pills inside modal */
+        .modal-summary {
+            display: flex;
+            gap: 10px;
+            padding: 14px 28px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .summary-pill {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 100px;
+        }
+
+        .summary-pill-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .summary-pill-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Table scroll area */
+        .modal-body {
+            flex: 1;
+            overflow: auto;
+            padding: 0;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+            .preview-table thead {
+                background: linear-gradient(135deg, var(--primary), #1e40af);
+                position: sticky;
+                top: 0;
+                z-index: 2;
+            }
+
+                .preview-table thead th {
+                    color: #fff;
+                    padding: 12px 16px;
+                    text-align: left;
+                    font-weight: 600;
+                    font-size: 0.75rem;
+                    text-transform: uppercase;
+                    letter-spacing: .5px;
+                    white-space: nowrap;
+                }
+
+            .preview-table tbody tr {
+                border-bottom: 1px solid var(--border);
+                transition: background .15s;
+            }
+
+                .preview-table tbody tr:hover {
+                    background: var(--primary-light);
+                }
+
+                .preview-table tbody tr:last-child {
+                    border-bottom: none;
+                }
+
+            .preview-table tbody td {
+                padding: 10px 16px;
+                color: var(--text-body);
+                vertical-align: middle;
+            }
+
+                .preview-table tbody td:first-child {
+                    font-weight: 700;
+                    color: var(--primary);
+                }
+
+        /* Row number badge */
+        .row-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        /* Modal footer */
+        .modal-footer {
+            padding: 16px 28px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: var(--bg);
+        }
+
+        .modal-footer-note {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-cancel {
+            padding: 9px 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-body);
+            cursor: pointer;
+            transition: background .15s, border-color .15s;
+        }
+
+            .btn-cancel:hover {
+                background: #fee2e2;
+                border-color: #fca5a5;
+                color: var(--danger);
+            }
+
+        .btn-upload {
+            padding: 9px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: opacity .2s, transform .15s;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+        }
+
+            .btn-upload:hover {
+                opacity: .92;
+                transform: translateY(-1px);
+            }
+
+            .btn-upload:active {
+                transform: translateY(0);
+            }
+
+            .btn-upload svg {
+                width: 15px;
+                height: 15px;
+            }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+        }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Error state */
+        .parse-error {
+            padding: 40px;
+            text-align: center;
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        /* ── RESPONSIVE ── */
+        @@media (max-width: 640px) {
+            .page-header {
+                padding: 14px 18px;
+            }
+
+            .container {
+                padding: 20px 14px 0;
+            }
+
+            .action-bar {
+                flex-direction: column;
+            }
+
+            .upload-zone {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 14px;
+                padding: 20px;
+            }
+
+            .template-card {
+                flex-direction: row;
+                align-items: center;
+                min-width: unset;
+            }
+
+            .files-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                border-radius: 12px;
+            }
+
+            .modal-header, .modal-footer {
+                padding: 16px 18px;
+            }
+
+            .modal-summary {
+                padding: 10px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="page-header">
+        <div class="brand">
+            <div class="brand-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 3h18a1 1 0 011 1v16a1 1 0 01-1 1H3a1 1 0 01-1-1V4a1 1 0 011-1zm1 5v3h5V8H4zm0 5v3h5v-3H4zm7-5v3h5V8h-5zm0 5v3h5v-3h-5zm7-5v3h2V8h-2zm0 5v3h2v-3h-2zM4 6h16V5H4v1z" />
+                </svg>
+            </div>
+            <div>
+                <div class="brand-name">Excel Manager</div>
+                <div class="brand-sub">Upload · Preview · Manage</div>
+            </div>
+        </div>
+        <div class="header-badge">Data Portal</div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="container">
+
+        <!-- ACTION BAR — file input only, NO form wrapping it -->
+        <div class="action-bar">
+
+            <!-- Upload Zone (just a label/div; the real form submit happens from the modal) -->
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 16V8m0 0l-3 3m3-3l3 3" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M7 20a5 5 0 110-10 5.5 5.5 0 0111 0 4 4 0 01-1 7.87" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <div class="upload-text">
+                    <h3>Drop Excel file here</h3>
+                    <p id="fileLabel">.xlsx or .xls · up to 10 MB</p>
+                </div>
+                <input type="file" name="fileInput" accept=".xlsx,.xls" id="fileInput" />
+            </div>
+
+            <!-- Download Template -->
+            <a href="@Url.Action("DownloadTemplate")" class="template-card">
+                <div class="template-card-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    </svg>
+                </div>
+                <div class="template-card-label">Starter File</div>
+                <div class="template-card-title">Download Template</div>
+            </a>
+        </div>
+
+        <!-- SECTION HEADER -->
+        <div class="section-header">
+            <div class="section-title">
+                Uploaded Files
+                <span class="section-count">@Model.Count</span>
+            </div>
+            <div class="section-meta">Sorted by latest upload</div>
+        </div>
+        <div class="divider"></div>
+
+        <!-- FILES GRID -->
+        @if (Model != null && Model.Count > 0)
+        {
+            <div class="files-grid">
+                @foreach (var item in Model)
+                {
+                    <div class="file-card">
+                        <div class="card-top">
+                            <div class="file-thumb">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="3" y="3" width="18" height="18" rx="3" fill="#dbeafe" />
+                                    <path d="M7 8h10M7 12h10M7 16h6" stroke="#2563eb" stroke-width="1.7" stroke-linecap="round" />
+                                </svg>
+                            </div>
+                            <div class="file-info">
+                                <div class="file-name" title="@item.FileName">@item.FileName</div>
+                                <span class="file-ext">xlsx</span>
+                            </div>
+                        </div>
+                        <div class="card-stats">
+                            <div class="stat-pill">
+                                <span class="stat-label">Records</span>
+                                <span class="stat-value accent">@item.RecordCount.ToString("N0")</span>
+                            </div>
+                            <div class="stat-pill">
+                                <span class="stat-label">Status</span>
+                                <span class="stat-value">Ready</span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="card-date">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="3" y="5" width="18" height="16" rx="2" stroke="#94a3b8" stroke-width="1.6" />
+                                    <path d="M3 9h18M8 3v4M16 3v4" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round" />
+                                </svg>
+                                @item.UploadedDate.ToString("dd MMM yyyy")
+                            </div>
+                            <a href="@Url.Action("Index", new { id = item.Id })" class="preview-btn">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.8" />
+                                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8" />
+                                </svg>
+                                Preview
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 12h2l2 5h10l2-5h2M3 12V5a1 1 0 011-1h16a1 1 0 011 1v7" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h3>No files uploaded yet</h3>
+                <p>Upload your first Excel file above to get started.</p>
+            </div>
+        }
+    </main>
+
+    <!-- ══════════════════════════════════════
+         PREVIEW MODAL
+    ══════════════════════════════════════ -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <div class="modal-header-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="3" width="18" height="18" rx="3" fill="#dbeafe" />
+                        <path d="M7 8h10M7 12h10M7 16h6" stroke="#2563eb" stroke-width="1.7" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <div class="modal-header-text">
+                    <div class="modal-title" id="modalTitle">File Preview</div>
+                    <div class="modal-subtitle" id="modalSubtitle">Review data before saving</div>
+                </div>
+                <button class="modal-close" id="modalClose" aria-label="Close preview">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Summary bar -->
+            <div class="modal-summary" id="modalSummary"></div>
+
+            <!-- Table -->
+            <div class="modal-body" id="modalBody">
+                <!-- populated by JS -->
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <span class="modal-footer-note" id="footerNote"></span>
+                <div class="footer-actions">
+                    <button class="btn-cancel" id="btnCancel">Cancel</button>
+                    <!-- This is the REAL upload form, submitted from JS -->
+                    <form id="realUploadForm" asp-action="UploadExcel" method="post" enctype="multipart/form-data" style="display:inline">
+                        <input type="file" name="file" id="hiddenFileInput" style="display:none" />
+                        <button type="submit" class="btn-upload" id="btnConfirmUpload">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 16V8m0 0l-3 3m3-3l3 3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M5 20h14" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                            <span class="spinner" id="uploadSpinner"></span>
+                            <span id="uploadBtnText">Confirm &amp; Upload</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ─── Elements ─── */
+        const fileInput      = document.getElementById('fileInput');
+        const fileLabel      = document.getElementById('fileLabel');
+        const uploadZone     = document.getElementById('uploadZone');
+        const modal          = document.getElementById('previewModal');
+        const modalClose     = document.getElementById('modalClose');
+        const btnCancel      = document.getElementById('btnCancel');
+        const modalBody      = document.getElementById('modalBody');
+        const modalSummary   = document.getElementById('modalSummary');
+        const modalTitle     = document.getElementById('modalTitle');
+        const modalSubtitle  = document.getElementById('modalSubtitle');
+        const footerNote     = document.getElementById('footerNote');
+        const hiddenFile     = document.getElementById('hiddenFileInput');
+        const realForm       = document.getElementById('realUploadForm');
+        const btnConfirm     = document.getElementById('btnConfirmUpload');
+        const uploadSpinner  = document.getElementById('uploadSpinner');
+        const uploadBtnText  = document.getElementById('uploadBtnText');
+
+        /* Column map — adjust indices if your Excel columns differ */
+        const COLUMNS = [
+            { key: 'CandidateId',   label: 'Candidate ID' },
+            { key: 'CandidateName', label: 'Candidate Name' },
+            { key: 'FatherName',    label: "Father's Name" },
+            { key: 'CourseName',    label: 'Course Name' },
+            { key: 'Duration',      label: 'Duration' },
+            { key: 'InstituteName', label: 'Institute Name' },
+        ];
+
+        /* ─── File chosen ─── */
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+            fileLabel.textContent = '✓ ' + file.name;
+            fileLabel.style.color = 'var(--primary)';
+            fileLabel.style.fontWeight = '600';
+            readAndPreview(file);
+        });
+
+        /* ─── Drag-over highlight ─── */
+        uploadZone.addEventListener('dragover',  (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+        uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('drag-over'));
+        uploadZone.addEventListener('drop',      (e) => {
+            uploadZone.classList.remove('drag-over');
+            const file = e.dataTransfer?.files[0];
+            if (file) { fileInput.files = e.dataTransfer.files; fileLabel.textContent = '✓ ' + file.name; readAndPreview(file); }
+        });
+
+        /* ─── Read Excel with SheetJS ─── */
+        function readAndPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data  = new Uint8Array(e.target.result);
+                    const wb    = XLSX.read(data, { type: 'array' });
+                    const ws    = wb.Sheets[wb.SheetNames[0]];
+                    const rows  = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+                    if (!rows || rows.length < 2) {
+                        showError('The file appears to be empty or has no data rows.');
+                        return;
+                    }
+
+                    const dataRows  = rows.slice(1);   // skip header row 0
+                    const totalRows = dataRows.length;
+
+                    /* Update modal meta */
+                    modalTitle.textContent   = file.name;
+                    modalSubtitle.textContent = 'Review all records before confirming the upload';
+                    footerNote.textContent   = `${totalRows} record${totalRows !== 1 ? 's' : ''} ready to save`;
+
+                    /* Summary pills */
+                    modalSummary.innerHTML = `
+                        <div class="summary-pill">
+                            <span class="summary-pill-label">File</span>
+                            <span class="summary-pill-value">${file.name}</span>
+                        </div>
+                        <div class="summary-pill">
+                            <span class="summary-pill-label">Total Records</span>
+                            <span class="summary-pill-value">${totalRows}</span>
+                        </div>
+                        <div class="summary-pill">
+                            <span class="summary-pill-label">Columns</span>
+                            <span class="summary-pill-value">${COLUMNS.length}</span>
+                        </div>
+                        <div class="summary-pill">
+                            <span class="summary-pill-label">Size</span>
+                            <span class="summary-pill-value">${(file.size / 1024).toFixed(1)} KB</span>
+                        </div>
+                    `;
+
+                    /* Build table */
+                    const colHeaders = COLUMNS.map(c => `<th>${c.label}</th>`).join('');
+                    const bodyRows   = dataRows.map((row, idx) => {
+                        const cells = COLUMNS.map((c, ci) => {
+                            const val = row[ci] !== undefined ? row[ci] : '';
+                            return `<td>${val}</td>`;
+                        }).join('');
+                        return `<tr><td><span class="row-num">${idx + 1}</span></td>${cells}</tr>`;
+                    }).join('');
+
+                    modalBody.innerHTML = `
+                        <table class="preview-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    ${colHeaders}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${bodyRows}
+                            </tbody>
+                        </table>
+                    `;
+
+                    /* Copy file to hidden input so the real form can submit it */
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    hiddenFile.files = dt.files;
+
+                    openModal();
+                } catch (err) {
+                    showError('Could not parse the file. Make sure it is a valid .xlsx or .xls file.');
+                    console.error(err);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function showError(msg) {
+            modalSummary.innerHTML = '';
+            modalBody.innerHTML    = `<div class="parse-error">⚠️ ${msg}</div>`;
+            footerNote.textContent = '';
+            openModal();
+        }
+
+        /* ─── Modal open/close ─── */
+        function openModal()  { modal.classList.add('open');  document.body.style.overflow = 'hidden'; }
+        function closeModal() {
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+            /* Reset file input so same file can be re-selected */
+            fileInput.value = '';
+            fileLabel.textContent = '.xlsx or .xls · up to 10 MB';
+            fileLabel.style.color = '';
+            fileLabel.style.fontWeight = '';
+        }
+
+        modalClose.addEventListener('click', closeModal);
+        btnCancel.addEventListener('click',  closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        /* Escape key */
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+        /* ─── Confirm upload — show spinner ─── */
+        realForm.addEventListener('submit', () => {
+            uploadSpinner.style.display = 'block';
+            uploadBtnText.textContent   = 'Uploading…';
+            btnConfirm.style.opacity    = '0.8';
+            btnConfirm.disabled         = true;
+        });
+    </script>
+
+</body>
+</html>

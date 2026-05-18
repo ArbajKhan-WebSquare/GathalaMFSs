@@ -1,0 +1,1075 @@
+﻿@model IEnumerable<GathalaMFS.Models.ExcelFileStudent>
+
+@{
+    ViewData["Title"] = "Student Detail List";
+    Layout = null;
+}
+
+<!-- ════════════════════════════════════════════
+     FONTS & ICONS
+════════════════════════════════════════════ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+
+    :root {
+        --bg: #f0f2f8;
+        --card: #ffffff;
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --primary-light: #eff6ff;
+        --accent: #0ea5e9;
+        --text-head: #0f172a;
+        --text-body: #334155;
+        --text-muted: #94a3b8;
+        --border: #e2e8f0;
+        --shadow-md: 0 4px 20px rgba(15,23,42,0.08), 0 1px 4px rgba(15,23,42,0.04);
+        --radius: 14px;
+        --radius-sm: 8px;
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: var(--bg);<i class="fa-solid fa-magnifying-glass sl-search-icon"></i>
+        font-family: 'DM Sans', sans-serif;
+        color: var(--text-body);
+        min-height: 100vh;
+    }
+
+    .sl-page {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 40px 24px 60px;
+    }
+
+    /* Header */
+    .sl-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .sl-header-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--primary);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(37,99,235,0.30);
+    }
+
+        .sl-header-icon svg {
+            width: 26px;
+            height: 26px;
+            fill: #fff;
+        }
+
+    .sl-heading {
+        font-size: clamp(1.5rem, 3vw, 2rem);
+        font-weight: 800;
+        color: var(--text-head);
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+    }
+
+        .sl-heading span {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-family: 'DM Sans', sans-serif;
+            margin-bottom: 2px;
+        }
+
+    /* Card */
+    .sl-card {
+        background: var(--card);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Toolbar - Upload, Search, Filters in one row */
+    .sl-toolbar {
+        padding: 20px 28px;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(135deg, #fafbff 0%, #f8faff 100%);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 20px;
+    }
+
+    .sl-upload-group {
+        flex: 2;
+        min-width: 240px;
+    }
+
+    .sl-filter-group {
+        flex: 2;
+        min-width: 200px;
+    }
+
+    .sl-search-group {
+        flex: 2;
+        min-width: 200px;
+    }
+
+    .sl-tool-label {
+        display: block;
+        font-size: 0.70rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+
+    .sl-upload-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .sl-file-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .sl-file-input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .sl-file-display {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border: 1.5px dashed var(--border);
+        border-radius: var(--radius-sm);
+        background: #fff;
+        transition: border-color 0.2s, background 0.2s;
+        cursor: pointer;
+        min-height: 44px;
+    }
+
+    .sl-file-wrap:hover .sl-file-display,
+    .sl-file-wrap:focus-within .sl-file-display {
+        border-color: var(--primary);
+        background: var(--primary-light);
+    }
+
+    .sl-file-display svg {
+        width: 18px;
+        height: 18px;
+        color: var(--primary);
+        flex-shrink: 0;
+    }
+
+    .sl-file-text {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sl-upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: var(--primary);
+        color: #fff;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        box-shadow: 0 2px 8px rgba(37,99,235,0.28);
+        white-space: nowrap;
+    }
+
+        .sl-upload-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .sl-upload-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37,99,235,0.32);
+        }
+
+        .sl-upload-btn:active {
+            transform: translateY(0);
+        }
+
+    .sl-search-input {
+        width: 25%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.875rem;
+        background: #fff;
+        transition: border-color 0.2s;
+    }
+
+        .sl-search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+    .sl-filter-select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.875rem;
+        background: #fff;
+        cursor: pointer;
+    }
+
+        .sl-filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+    /* Stats bar */
+    .sl-stats-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 28px;
+        border-bottom: 1px solid var(--border);
+        gap: 12px;
+        flex-wrap: wrap;
+        background: #fff;
+    }
+
+    .sl-record-count {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+        .sl-record-count strong {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+    /* Table */
+    .sl-table-section {
+        padding: 0;
+    }
+
+    .sl-table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sl-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 780px;
+    }
+
+        .sl-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+            .sl-table thead th {
+                background: #f8faff;
+                padding: 13px 18px;
+                font-family: 'Syne', sans-serif;
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.07em;
+                text-transform: uppercase;
+                color: var(--text-muted);
+                text-align: left;
+                border-bottom: 2px solid var(--border);
+                white-space: nowrap;
+            }
+
+                .sl-table thead th:first-child {
+                    padding-left: 28px;
+                }
+
+                .sl-table thead th:last-child {
+                    padding-right: 28px;
+                    text-align: center;
+                }
+
+        .sl-table tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+
+            .sl-table tbody tr:last-child {
+                border-bottom: none;
+            }
+
+            .sl-table tbody tr:nth-child(even) {
+                background: #fafbff;
+            }
+
+            .sl-table tbody tr:hover {
+                background: #eff6ff;
+            }
+
+        .sl-table tbody td {
+            padding: 14px 18px;
+            font-size: 0.875rem;
+            color: var(--text-body);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+            .sl-table tbody td:first-child {
+                padding-left: 28px;
+            }
+
+            .sl-table tbody td:last-child {
+                padding-right: 28px;
+                text-align: center;
+            }
+
+    /* Cells */
+    .sl-id-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: var(--primary-light);
+        color: var(--primary);
+        border-radius: 8px;
+        font-family: 'Syne', sans-serif;
+        font-size: 0.80rem;
+        font-weight: 700;
+    }
+
+    .sl-name-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .sl-name-main {
+        font-weight: 600;
+        color: var(--text-head);
+        font-size: 0.875rem;
+    }
+
+    .sl-name-sub {
+        font-size: 0.77rem;
+        color: var(--text-muted);
+    }
+
+    .sl-course-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.77rem;
+        font-weight: 600;
+        background: #f0fdf4;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+    }
+
+    .sl-duration-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        background: #fff7ed;
+        color: #ea580c;
+        border-radius: 20px;
+        font-size: 0.77rem;
+        font-weight: 600;
+        border: 1px solid #fed7aa;
+    }
+
+        .sl-duration-chip svg {
+            width: 11px;
+            height: 11px;
+        }
+
+    .sl-date {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .btn-qr {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.80rem;
+        font-weight: 600;
+        color: #fff;
+        background: var(--primary);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        box-shadow: 0 2px 6px rgba(37,99,235,0.24);
+        white-space: nowrap;
+    }
+
+        .btn-qr svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .btn-qr:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(37,99,235,0.32);
+        }
+
+        .btn-qr:active {
+            transform: translateY(0);
+        }
+
+    /* Empty state */
+    .sl-empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+    }
+
+        .sl-empty svg {
+            width: 56px;
+            height: 56px;
+            color: #cbd5e1;
+            margin-bottom: 14px;
+        }
+
+        .sl-empty p {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+    /* Pagination */
+    .sl-pagination-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 28px;
+        border-top: 1px solid var(--border);
+        background: #fafbff;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .sl-page-info {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+        .sl-page-info strong {
+            color: var(--text-body);
+            font-weight: 700;
+        }
+
+    .sl-pagination {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        list-style: none;
+    }
+
+        .sl-pagination li button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 8px;
+            border: 1.5px solid var(--border);
+            border-radius: 9px;
+            background: #fff;
+            color: var(--text-body);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s;
+            line-height: 1;
+        }
+
+            .sl-pagination li button:hover:not(:disabled) {
+                border-color: var(--primary);
+                color: var(--primary);
+                background: var(--primary-light);
+                transform: translateY(-1px);
+                box-shadow: 0 3px 8px rgba(37,99,235,0.14);
+            }
+
+            .sl-pagination li button:disabled {
+                opacity: 0.35;
+                cursor: not-allowed;
+            }
+
+            .sl-pagination li button.active {
+                background: var(--primary);
+                border-color: var(--primary);
+                color: #fff;
+                box-shadow: 0 3px 10px rgba(37,99,235,0.30);
+                transform: translateY(-1px);
+            }
+
+            .sl-pagination li button svg {
+                width: 15px;
+                height: 15px;
+                display: block;
+            }
+
+    .sl-ellipsis {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        height: 36px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+        font-weight: 600;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    /* Mobile */
+    @@media (max-width: 640px) {
+        .sl-page {
+            padding: 20px 14px 40px;
+        }
+
+        .sl-toolbar {
+            padding: 18px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .sl-stats-bar {
+            padding: 12px 18px;
+        }
+
+        .sl-pagination-wrap {
+            padding: 14px 18px;
+        }
+
+        .sl-table thead th:first-child,
+        .sl-table tbody td:first-child {
+            padding-left: 18px;
+        }
+
+        .sl-table thead th:last-child,
+        .sl-table tbody td:last-child {
+            padding-right: 18px;
+        }
+
+        .sl-table thead th,
+        .sl-table tbody td {
+            padding: 11px 12px;
+        }
+
+        .sl-pagination li button {
+            min-width: 32px;
+            height: 32px;
+            font-size: 0.78rem;
+            border-radius: 7px;
+        }
+    }
+</style>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE
+════════════════════════════════════════════════════════ -->
+<div class="sl-page">
+
+    <!-- Header -->
+    <div class="sl-header">
+        <div class="sl-header-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3C9.24 3 7 5.24 7 8s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 12c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4z" />
+            </svg>
+        </div>
+        <div class="sl-heading">
+            <span>Management System</span>
+            Student List
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="sl-alert sl-alert-success">
+            <i class="fa-solid fa-circle-check"></i> @TempData["Success"]
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="sl-alert sl-alert-error">
+            <i class="fa-solid fa-circle-xmark"></i> @TempData["Error"]
+        </div>
+    }
+
+    <!-- Main card -->
+    <div class="sl-card">
+
+        <!-- ── TOOLBAR ── -->
+        <div class="sl-toolbar">
+
+            <!-- Upload -->
+            @* <div class="sl-upload-group">
+                <div class="sl-tool-label">Import Records</div>
+                <form method="post" enctype="multipart/form-data" asp-action="Upload" id="uploadForm">
+                    <div class="sl-upload-row">
+                        <div class="sl-file-wrap">
+                            <input type="file" name="file" class="sl-file-input" id="fileInput"
+                                   onchange="document.getElementById('fileLabel').textContent = this.files[0]?.name || 'Choose a file…'" />
+                            <div class="sl-file-display">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                     stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="12" y1="18" x2="12" y2="12" />
+                                    <line x1="9" y1="15" x2="15" y2="15" />
+                                </svg>
+                                <span class="sl-file-text" id="fileLabel">Choose a file to upload…</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="sl-upload-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="16 16 12 12 8 16" />
+                                <line x1="12" y1="12" x2="12" y2="21" />
+                                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+                            </svg>
+                            Upload
+                        </button>
+                    </div>
+                </form>
+            </div> *@
+
+            <!-- Search -->
+            <div class="sl-search-group">
+                <div class="sl-tool-label">Search</div>
+                <div class="sl-search-wrap">
+                   
+                    <input type="text" id="searchInput" class="sl-search-input"
+                           placeholder="Name, father, institute…" autocomplete="off">
+                </div>
+            </div>
+
+            <!-- Course Filter -->
+            @* <div class="sl-filter-group">
+                <div class="sl-tool-label">Filter by Course</div>
+                <select id="courseFilter" class="sl-filter-select">
+                    <option value="">All Courses</option>
+                    @{
+                        var courses = Model?
+                            .Select(s => s.Student.CourseName)
+                            .Where(c => !string.IsNullOrWhiteSpace(c))
+                            .Distinct()
+                            .OrderBy(c => c)
+                            ?? Enumerable.Empty<string>();
+                    }
+                </select>
+            </div> *@
+
+        </div><!-- /.sl-toolbar -->
+        <!-- ── STATS BAR ── -->
+        <div class="sl-stats-bar">
+            <span class="sl-record-count">
+                Showing
+                <strong id="rangeStart">0</strong>–<strong id="rangeEnd">0</strong>
+                of <strong id="totalRecordsCount">@(Model?.Count() ?? 0)</strong>
+                student record@((Model?.Count() ?? 0) != 1 ? "s" : "")
+            </span>
+        </div>
+
+        <!-- ── TABLE ── -->
+        <div class="sl-table-section">
+            <div class="sl-table-scroll">
+
+                @if (Model != null && Model.Any())
+                {
+                    <table class="sl-table" id="studentTable">
+                        <thead>
+                            <tr>
+                                <th>Candidate ID</th>
+                                <th>Candidate Name</th>
+                                <th>Course Name</th>
+                                <th>Duration</th>
+                                <th>Institute Name</th>
+                                <th>Created Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            @foreach (var item in Model)
+                            {
+                                <tr class="sl-data-row"
+                                    data-id="@item.Student.CandidateId"
+                                    data-name="@item.Student.CandidateName?.ToLower()"
+                                    data-father="@item.Student.FatherName?.ToLower()"
+                                    data-course="@item.Student.CourseName?.ToLower()"
+                                    data-institute="@item.Student.InstituteName?.ToLower()">
+
+                                    <td><span class="sl-id-badge">@item.Student.CandidateId</span></td>
+
+                                    <td>
+                                        <div class="sl-name-cell">
+                                            <span class="sl-name-main">@item.Student.CandidateName</span>
+                                            <span class="sl-name-sub">S/O @item.Student.FatherName</span>
+                                        </div>
+                                    </td>
+
+                                    <td><span class="sl-course-badge">@item.Student.CourseName</span></td>
+
+                                    <td>
+                                        <span class="sl-duration-chip">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10" />
+                                                <polyline points="12 6 12 12 16 14" />
+                                            </svg>
+                                            @item.Student.Duration
+                                        </span>
+                                    </td>
+
+                                    <td>@item.Student.InstituteName</td>
+
+                                    <td><span class="sl-date">@item.Student.CreatedDate.ToString("dd MMM yyyy")</span></td>
+
+                                    <td>
+                                        <button type="button" class="btn-qr" onclick="generateQRCode(@item.Student.Id)">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="3" width="7" height="7" />
+                                                <rect x="14" y="3" width="7" height="7" />
+                                                <rect x="3" y="14" width="7" height="7" />
+                                                <line x1="14" y1="14" x2="14" y2="14" />
+                                                <line x1="17" y1="14" x2="17" y2="14" />
+                                                <line x1="20" y1="14" x2="20" y2="14" />
+                                                <line x1="14" y1="17" x2="14" y2="17" />
+                                                <line x1="17" y1="17" x2="17" y2="17" />
+                                                <line x1="20" y1="17" x2="20" y2="17" />
+                                                <line x1="14" y1="20" x2="14" y2="20" />
+                                                <line x1="17" y1="20" x2="17" y2="20" />
+                                                <line x1="20" y1="20" x2="20" y2="20" />
+                                            </svg>
+                                            Print QR
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    
+                }
+                else
+                {
+                    <div class="sl-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="4" />
+                            <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" />
+                        </svg>
+                        <p>No student records found. Upload a file to get started.</p>
+                    </div>
+                }
+
+            </div><!-- /.sl-table-scroll -->
+        </div><!-- /.sl-table-section -->
+        <!-- ── PAGINATION ── -->
+        @if (Model != null && Model.Any())
+        {
+            <div class="sl-pagination-wrap" id="paginationWrap">
+                <span class="sl-page-info">
+                    Page <strong id="currentPageDisplay">1</strong>
+                    of <strong id="totalPagesDisplay">1</strong>
+                </span>
+                <ul class="sl-pagination" id="paginationList"></ul>
+            </div>
+        }
+
+    </div><!-- /.sl-card -->
+</div><!-- /.sl-page -->
+<!-- QR library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+    /* ═══════════════════════════════════════════════════════════════════════
+       STUDENT TABLE  –  Search · Filter · Pagination  (fully client-side)
+    ═══════════════════════════════════════════════════════════════════════ */
+    (function () {
+
+        const ROWS_PER_PAGE = 10;
+
+        /* ── state ── */
+        let allRows      = [];   // every <tr.sl-data-row> DOM node
+        let filteredRows = [];   // subset after search + filter
+        let currentPage  = 1;
+
+        /* ── refs ── */
+        const searchInput   = document.getElementById('searchInput');
+        const courseFilter  = document.getElementById('courseFilter');
+        const tableBody     = document.getElementById('tableBody');
+        const noResults     = document.getElementById('noResults');
+        const paginationWrap= document.getElementById('paginationWrap');
+
+        /* ══════════════════════════════════════════
+           INIT
+        ══════════════════════════════════════════ */
+        document.addEventListener('DOMContentLoaded', function () {
+
+            allRows = Array.from(document.querySelectorAll('.sl-data-row'));
+
+            if (allRows.length === 0) return;   // empty model – nothing to do
+
+            filteredRows = allRows.slice();
+            render();
+
+            /* live search */
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    currentPage = 1;
+                    applyFilters();
+                });
+            }
+
+            /* course dropdown */
+            if (courseFilter) {
+                courseFilter.addEventListener('change', function () {
+                    currentPage = 1;
+                    applyFilters();
+                });
+            }
+        });
+
+        /* ══════════════════════════════════════════
+           FILTER
+        ══════════════════════════════════════════ */
+        function applyFilters() {
+
+            const term   = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const course = courseFilter ? courseFilter.value : '';
+
+            filteredRows = allRows.filter(function (row) {
+
+                /* data-* attributes already stored lowercase in Razor */
+                const name      = row.dataset.name      || '';
+                const father    = row.dataset.father    || '';
+                const institute = row.dataset.institute || '';
+                const rowCourse = row.dataset.course    || '';
+
+                const matchSearch = term === '' ||
+                                    name.includes(term) ||
+                                    father.includes(term) ||
+                                    institute.includes(term);
+
+                const matchCourse = course === '' || rowCourse === course;
+
+                return matchSearch && matchCourse;
+            });
+
+            render();
+        }
+
+        /* ══════════════════════════════════════════
+           RENDER  (hide/show rows + update UI)
+        ══════════════════════════════════════════ */
+        function render() {
+
+            const total      = filteredRows.length;
+            const totalPages = Math.max(1, Math.ceil(total / ROWS_PER_PAGE));
+
+            /* clamp page */
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIdx = (currentPage - 1) * ROWS_PER_PAGE;
+            const endIdx   = Math.min(startIdx + ROWS_PER_PAGE, total);
+
+            /* hide every row, then show only the current slice */
+            allRows.forEach(function (r) { r.style.display = 'none'; });
+            for (var i = startIdx; i < endIdx; i++) {
+                filteredRows[i].style.display = '';
+            }
+
+            /* no-results overlay */
+            if (noResults) {
+                noResults.classList.toggle('visible', total === 0);
+            }
+
+            /* stats bar */
+            updateStats(total, startIdx, endIdx);
+
+            /* pagination */
+            updatePagination(totalPages);
+        }
+
+        /* ══════════════════════════════════════════
+           STATS BAR
+        ══════════════════════════════════════════ */
+        function updateStats(total, startIdx, endIdx) {
+
+            var rs  = document.getElementById('rangeStart');
+            var re  = document.getElementById('rangeEnd');
+            var tot = document.getElementById('totalRecordsCount');
+
+            if (!rs || !re || !tot) return;
+
+            rs.textContent  = total === 0 ? '0' : (startIdx + 1);
+            re.textContent  = total === 0 ? '0' : endIdx;
+            tot.textContent = total;
+        }
+
+        /* ══════════════════════════════════════════
+           PAGINATION
+        ══════════════════════════════════════════ */
+        function updatePagination(totalPages) {
+
+            var cpd  = document.getElementById('currentPageDisplay');
+            var tpd  = document.getElementById('totalPagesDisplay');
+            var list = document.getElementById('paginationList');
+
+            if (cpd) cpd.textContent = currentPage;
+            if (tpd) tpd.textContent = totalPages;
+            if (!list) return;
+
+            list.innerHTML = '';
+
+            /* ─ Previous ─ */
+            list.appendChild(makePrevBtn(totalPages));
+
+            /* ─ Page numbers ─ */
+            getPageRange(currentPage, totalPages).forEach(function (p) {
+                if (p === '…') {
+                    var li = document.createElement('li');
+                    li.className   = 'sl-ellipsis';
+                    li.textContent = '…';
+                    list.appendChild(li);
+                } else {
+                    list.appendChild(makePageBtn(p, totalPages));
+                }
+            });
+
+            /* ─ Next ─ */
+            list.appendChild(makeNextBtn(totalPages));
+        }
+
+        function makePrevBtn(totalPages) {
+            var li  = document.createElement('li');
+            var btn = document.createElement('button');
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+            btn.setAttribute('aria-label', 'Previous page');
+            btn.disabled = currentPage <= 1;
+            if (!btn.disabled) {
+                btn.addEventListener('click', function () {
+                    currentPage--;
+                    render();
+                });
+            }
+            li.appendChild(btn);
+            return li;
+        }
+
+        function makeNextBtn(totalPages) {
+            var li  = document.createElement('li');
+            var btn = document.createElement('button');
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+            btn.setAttribute('aria-label', 'Next page');
+            btn.disabled = currentPage >= totalPages;
+            if (!btn.disabled) {
+                btn.addEventListener('click', function () {
+                    currentPage++;
+                    render();
+                });
+            }
+            li.appendChild(btn);
+            return li;
+        }
+
+        function makePageBtn(pageNum, totalPages) {
+            var li  = document.createElement('li');
+            var btn = document.createElement('button');
+            btn.textContent = pageNum;
+            if (pageNum === currentPage) btn.classList.add('active');
+            btn.addEventListener('click', function () {
+                currentPage = pageNum;
+                render();
+            });
+            li.appendChild(btn);
+            return li;
+        }
+
+        /* smart ellipsis range */
+        function getPageRange(current, total) {
+            if (total <= 7) {
+                return Array.from({ length: total }, function (_, i) { return i + 1; });
+            }
+
+            var pages = new Set([1, total, current]);
+            if (current > 1)     pages.add(current - 1);
+            if (current < total) pages.add(current + 1);
+
+            var sorted = Array.from(pages).sort(function (a, b) { return a - b; });
+            var result = [];
+
+            for (var i = 0; i < sorted.length; i++) {
+                if (i > 0 && sorted[i] - sorted[i - 1] > 1) result.push('…');
+                result.push(sorted[i]);
+            }
+
+            return result;
+        }
+
+    })();  /* end IIFE */
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       QR CODE GENERATOR  – stub; replace with your real implementation
+    ═══════════════════════════════════════════════════════════════════════ */
+    function generateQRCode(id) {
+
+    window.open('/Student/Download/' + id, '_blank');
+    }
+</script>

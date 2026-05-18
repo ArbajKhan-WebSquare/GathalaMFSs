@@ -1,0 +1,418 @@
+﻿@model GathalaMFS.Models.User
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Login | GathalaMFS</title>
+    <!-- Google Fonts: Poppins for modern sans-serif -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 (free icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f2b3d 0%, #1b4f6e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        /* subtle decorative circles */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(255,255,240,0.08);
+            border-radius: 50%;
+            top: -100px;
+            left: -80px;
+            z-index: 0;
+        }
+        body::after {
+            content: "";
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,215,150,0.05);
+            border-radius: 50%;
+            bottom: -150px;
+            right: -100px;
+            z-index: 0;
+        }
+
+        /* main card container */
+        .login-container {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: transform 0.2s ease;
+            z-index: 2;
+        }
+
+        .login-container:hover {
+            transform: translateY(-4px);
+        }
+
+        /* header brand area */
+        .login-header {
+            background: #1e3a4d;
+            /* padding: 1.8rem 2rem 1.5rem; */
+            text-align: center;
+            color: white;
+        }
+
+        .brand-icon {
+            font-size: 3rem;
+            background: #ffb347;
+            width: 70px;
+            height: 70px;
+            line-height: 70px;
+            text-align: center;
+            border-radius: 35px;
+            margin: 0 auto 1rem;
+            box-shadow: 0 8px 14px rgba(0,0,0,0.2);
+        }
+
+        .brand-icon i {
+            color: #1e2f3a;
+            font-size: 2.4rem;
+            vertical-align: middle;
+        }
+
+        .login-header h2 {
+            font-weight: 700;
+            font-size: 1.9rem;
+            letter-spacing: -0.3px;
+            margin-bottom: 0.25rem;
+        }
+
+        .login-header p {
+            font-size: 0.85rem;
+            opacity: 0.85;
+            font-weight: 400;
+        }
+
+        /* form content */
+        .login-form {
+            padding: 2rem 2rem 2.2rem;
+        }
+
+        /* input group modern style */
+        .input-group-custom {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .input-group-custom label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            color: #1f3e48;
+            letter-spacing: -0.2px;
+        }
+
+        .input-group-custom label i {
+            margin-right: 8px;
+            font-size: 0.9rem;
+            color: #ff8c42;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            font-size: 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 1.2rem;
+            background-color: #fefefe;
+            transition: all 0.2s ease;
+            font-family: 'Inter', monospace;
+            font-weight: 500;
+            outline: none;
+            color: #1a2c36;
+        }
+
+        .input-wrapper input:focus {
+            border-color: #ff9f4a;
+            box-shadow: 0 0 0 4px rgba(255, 159, 74, 0.2);
+            background-color: #ffffff;
+        }
+
+        .input-wrapper input::placeholder {
+            color: #b9c8d4;
+            font-weight: 400;
+            font-size: 0.9rem;
+        }
+
+        /* optional toggle password icon (just UX, without JS? we can add minimal JS later) */
+        .toggle-pwd {
+            position: absolute;
+            right: 16px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            transition: color 0.2s;
+        }
+        .toggle-pwd:hover {
+            color: #ff8c42;
+        }
+
+        /* forgot password row */
+        .forgot-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1.8rem;
+        }
+
+        .forgot-link {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #2c6e9e;
+            text-decoration: none;
+            transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .forgot-link i {
+            font-size: 0.75rem;
+        }
+
+        .forgot-link:hover {
+            color: #ff7b2c;
+            text-decoration: underline;
+        }
+
+        /* login button */
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(105deg, #ff9142 0%, #ff6a2e 100%);
+            border: none;
+            padding: 0.9rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: white;
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 6px 14px rgba(255, 107, 46, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .login-btn i {
+            font-size: 1.1rem;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(105deg, #ff7a2c 0%, #ff551a 100%);
+            transform: scale(1.01);
+            box-shadow: 0 12px 22px rgba(255, 80, 30, 0.4);
+        }
+
+        /* error message style */
+        .error-message {
+            background: #ffe9e6;
+            border-left: 5px solid #e34d3a;
+            padding: 0.8rem 1rem;
+            border-radius: 1rem;
+            margin-top: 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #bc3900;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-message i {
+            font-size: 1.1rem;
+        }
+
+        /* additional helpers */
+        .signup-suggestion {
+            text-align: center;
+            margin-top: 1.6rem;
+            font-size: 0.8rem;
+            color: #5b7e8c;
+            border-top: 1px solid #eef2f5;
+            padding-top: 1.2rem;
+        }
+
+        .signup-suggestion a {
+            color: #ff7b2c;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .signup-suggestion a:hover {
+            text-decoration: underline;
+        }
+
+        /* responsive */
+        @@media (max-width: 520px) {
+            .login-container {
+                max-width: 100%;
+            }
+            .login-form {
+                padding: 1.5rem;
+            }
+            .login-header {
+                padding: 1.4rem 1rem;
+            }
+        }
+
+        img {
+            height: 150px;
+            width: stretch;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            @* <div class="brand-icon">
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
+            <h2>GathalaMFS</h2>
+            <p>Secure access to your financial dashboard</p> *@
+            <img src="~/image/image1.png" />
+        </div>
+
+        <div class="login-form">
+            <!-- 
+                Important: This form uses the exact same model binding and attributes 
+                as your original code (asp-for). It will work seamlessly with your backend.
+                The layout is null to match your Layout = null requirement.
+                All input names match the original (Username, Password) and method="post".
+            -->
+            <form method="post" id="loginForm">
+                <!-- Username field -->
+                <div class="input-group-custom">
+                    <label for="Username">
+                        <i class="fas fa-user-circle"></i> Username 
+                    </label>
+                    <div class="input-wrapper">
+                        <input asp-for="Username" class="form-control" id="Username" 
+                               placeholder="john.doe" autocomplete="username" />
+                    </div>
+                </div>
+
+                <!-- Password field with show/hide toggle (client-side, no backend interference) -->
+                <div class="input-group-custom">
+                    <label for="Password">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <div class="input-wrapper">
+                        <input asp-for="Password" type="password" class="form-control" id="Password"
+                               placeholder="••••••••" autocomplete="current-password" />
+                        <button type="button" class="toggle-pwd" id="togglePwdBtn" aria-label="Show password">
+                            <i class="far fa-eye-slash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Forgot password link (preserves original action) -->
+                <div class="forgot-row">
+                    <a asp-controller="Login" asp-action="ForgotPassword" class="forgot-link">
+                        <i class="fas fa-key"></i> Forgot Password?
+                    </a>
+                </div>
+
+                <!-- Login button -->
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-arrow-right-to-bracket"></i> Login
+                </button>
+
+                <!-- Error message area bound to ViewBag.Error (dynamic server error) -->
+                @if (!string.IsNullOrEmpty(ViewBag.Error))
+                {
+                    <div class="error-message">
+                        <i class="fas fa-circle-exclamation"></i>
+                        <span>@ViewBag.Error</span>
+                    </div>
+                }
+                else
+                {
+                    <!-- Hidden placeholder but will show if error exists from backend -->
+                    <div id="dynamicErrorContainer" style="display: none;" class="error-message">
+                        <i class="fas fa-circle-exclamation"></i>
+                        <span id="errorText"></span>
+                    </div>
+                }
+
+                <!-- Optional: additional hint / signup suggestion (purely design) -->
+                <div class="signup-suggestion">
+                    Don't have an account? <a href="#">Contact support</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Simple vanilla JavaScript for password visibility toggle (UX enhancement) -->
+    <script>
+        (function() {
+            const toggleBtn = document.getElementById('togglePwdBtn');
+            const passwordInput = document.getElementById('Password');
+
+            if (toggleBtn && passwordInput) {
+                toggleBtn.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    // toggle icon
+                    const icon = toggleBtn.querySelector('i');
+                    if (icon) {
+                        if (type === 'text') {
+                            icon.classList.remove('fa-eye-slash');
+                            icon.classList.add('fa-eye');
+                        } else {
+                            icon.classList.remove('fa-eye');
+                            icon.classList.add('fa-eye-slash');
+                        }
+                    }
+                });
+            }
+
+            
+        })();
+    </script>
+
+    <!-- 
+        Important note: The Layout = null and all original razor directives are preserved.
+        asp-for attributes bind exactly to GathalaMFS.Models.User model properties (Username, Password).
+        The form method remains POST, so backend Login action will receive model.
+        Forgot password link uses asp-controller and asp-action as original.
+        Added modern styling, improved accessibility and responsiveness.
+    -->
+</body>
+</html>
