@@ -426,6 +426,37 @@
                 height: 13px;
             }
 
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .edit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fcd34d;
+            border-radius: var(--radius-sm);
+            padding: 7px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background .2s, color .2s, border-color .2s;
+        }
+
+            .edit-btn:hover {
+                background: #f59e0b;
+                color: #fff;
+                border-color: #f59e0b;
+            }
+
+            .edit-btn svg {
+                width: 13px;
+                height: 13px;
+            }
+
         .preview-btn {
             display: inline-flex;
             align-items: center;
@@ -434,7 +465,7 @@
             color: var(--primary);
             border: 1px solid #bfdbfe;
             border-radius: var(--radius-sm);
-            padding: 7px 14px;
+            padding: 7px 10px;
             font-size: 0.8rem;
             font-weight: 600;
             text-decoration: none;
@@ -957,13 +988,36 @@
                                 </svg>
                                 @item.UploadedDate.ToString("dd MMM yyyy")
                             </div>
-                            <a href="@Url.Action("Index", new { id = item.Id })" class="preview-btn">
-                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.8" />
-                                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8" />
-                                </svg>
-                                Preview
-                            </a>
+                            <div class="card-actions">
+                                <button type="button"
+                                        class="edit-btn open-edit-modal"
+                                        data-id="@item.Id"
+                                        data-name="@item.FileName">
+
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
+                                              stroke="currentColor"
+                                              stroke-width="1.8"
+                                              stroke-linecap="round"
+                                              stroke-linejoin="round" />
+
+                                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                                              stroke="currentColor"
+                                              stroke-width="1.8"
+                                              stroke-linecap="round"
+                                              stroke-linejoin="round" />
+                                    </svg>
+
+                                    Edit
+                                </button>
+                                <a href="@Url.Action("Index", new { id = item.Id })" class="preview-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.8" />
+                                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8" />
+                                    </svg>
+                                    Detail
+                                </a>
+                            </div>
                         </div>
                     </div>
                 }
@@ -982,7 +1036,114 @@
             </div>
         }
     </main>
+    <!-- EDIT MODAL -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal" style="max-width:600px;">
 
+            <div class="modal-header">
+                <div class="modal-header-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 16V8m0 0l-3 3m3-3l3 3"
+                              stroke="#2563eb"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round" />
+                    </svg>
+                </div>
+
+                <div class="modal-header-text">
+                    <div class="modal-title">Update Excel File</div>
+                    <div class="modal-subtitle">
+                        Upload a new Excel file to replace existing records
+                    </div>
+                </div>
+
+                 <div style="display: flex; gap: 8px;">
+                <a href="#" id="downloadExcelBtn" class="edit-btn" style="background: #2563eb; color: white; border-color: #2563eb;">
+                    <svg viewBox="0 0 24 24" fill="none" width="14" height="14">
+                        <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Download
+                </a>
+                <button class="modal-close" id="editModalClose">✕</button>
+            </div>
+        </div>
+
+            <form asp-action="EditExcel"
+                  asp-controller="Student"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                <input type="hidden" name="Id" id="editExcelId" />
+
+                <div style="padding:25px;">
+
+                    <div style="margin-bottom:20px;">
+                        <label style="font-weight:600; display:block; margin-bottom:8px;">
+                            File Name
+                        </label>
+
+                        <input type="text"
+                               name="FileName"
+                               id="editFileName"
+                               class="form-input"
+                               style="
+                        width:100%;
+                        padding:12px;
+                        border:1px solid var(--border);
+                        border-radius:10px;
+                        outline:none;
+                        " />
+                    </div>
+
+                    @* <div>
+                        <label style="font-weight:600; display:block; margin-bottom:8px;">
+                            Upload New Excel File
+                        </label>
+
+                        <input type="file"
+                               name="file"
+                               accept=".xlsx,.xls"
+                               required
+                               style="
+                        width:100%;
+                        padding:12px;
+                        border:1px solid var(--border);
+                        border-radius:10px;
+                        background:#fff;
+                        " />
+                    </div> *@
+                    <div class="upload-zone" id="uploadZone">
+                        <div class="upload-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 16V8m0 0l-3 3m3-3l3 3" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M7 20a5 5 0 110-10 5.5 5.5 0 0111 0 4 4 0 01-1 7.87" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <div class="upload-text">
+                            <h3>Drop Excel file here</h3>
+                            <p id="fileLabel">.xlsx or .xls · up to 10 MB</p>
+                        </div>
+                        <input type="file" name="file" accept=".xlsx,.xls" required />
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn-cancel"
+                            id="editCancelBtn">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="btn-upload">
+                        Update File
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
     <!-- ══════════════════════════════════════
          PREVIEW MODAL
     ══════════════════════════════════════ -->
@@ -1024,6 +1185,7 @@
                     <!-- This is the REAL upload form, submitted from JS -->
                     <form id="realUploadForm" asp-action="UploadExcel" method="post" enctype="multipart/form-data" style="display:inline">
                         <input type="file" name="file" id="hiddenFileInput" style="display:none" />
+                        <input type="hidden" name="InputFileName" id="hiddenExcelFileName" />
                         <button type="submit" class="btn-upload" id="btnConfirmUpload">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 16V8m0 0l-3 3m3-3l3 3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
@@ -1111,10 +1273,24 @@
 
                     /* Summary pills */
                     modalSummary.innerHTML = `
-                        <div class="summary-pill">
-                            <span class="summary-pill-label">File</span>
-                            <span class="summary-pill-value">${file.name}</span>
-                        </div>
+        <div class="summary-pill" style="min-width:260px;">
+        <span class="summary-pill-label">File Name *</span>
+
+        <input type="text"
+        id="excelFileName"
+        name="excelFileName"
+        value="${file.name.replace(/\.[^/.]+$/, "")}"
+        placeholder="Enter file name"
+        required
+        style="
+        padding:10px 12px;
+        border:1px solid var(--border);
+        border-radius:8px;
+        font-size:0.85rem;
+        width:100%;
+        outline:none;
+        " />
+        </div>
                         <div class="summary-pill">
                             <span class="summary-pill-label">Total Records</span>
                             <span class="summary-pill-value">${totalRows}</span>
@@ -1194,11 +1370,87 @@
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
         /* ─── Confirm upload — show spinner ─── */
-        realForm.addEventListener('submit', () => {
-            uploadSpinner.style.display = 'block';
-            uploadBtnText.textContent   = 'Uploading…';
-            btnConfirm.style.opacity    = '0.8';
-            btnConfirm.disabled         = true;
+        realForm.addEventListener('submit', (e) => {
+
+        const fileNameInput = document.getElementById('excelFileName');
+        const hiddenName    = document.getElementById('hiddenExcelFileName');
+
+        if (!fileNameInput.value.trim()) {
+        e.preventDefault();
+
+        fileNameInput.focus();
+        fileNameInput.style.borderColor = 'var(--danger)';
+
+        alert('File name is required.');
+
+        return;
+        }
+
+        hiddenName.value = fileNameInput.value.trim();
+
+        uploadSpinner.style.display = 'block';
+        uploadBtnText.textContent   = 'Uploading…';
+        btnConfirm.style.opacity    = '0.8';
+        btnConfirm.disabled         = true;
+        });
+
+
+
+        /* =========================
+        EDIT MODAL
+        ========================= */
+
+        const editModal      = document.getElementById('editModal');
+        const editModalClose = document.getElementById('editModalClose');
+        const editCancelBtn  = document.getElementById('editCancelBtn');
+
+        document.querySelectorAll('.open-edit-modal').forEach(btn => {
+
+        btn.addEventListener('click', function () {
+
+        const id   = this.dataset.id;
+        const name = this.dataset.name;
+
+        document.getElementById('editExcelId').value = id;
+        document.getElementById('editFileName').value = name;
+
+        editModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        });
+        });
+
+        function closeEditModal() {
+        editModal.classList.remove('open');
+        document.body.style.overflow = '';
+        }
+
+        editModalClose.addEventListener('click', closeEditModal);
+        editCancelBtn.addEventListener('click', closeEditModal);
+
+        editModal.addEventListener('click', function (e) {
+        if (e.target === editModal) {
+        closeEditModal();
+        }
+        });
+
+        // Update the edit button click handler to set the download link
+        document.querySelectorAll('.open-edit-modal').forEach(btn => {
+        btn.addEventListener('click', function () {
+        const id = this.dataset.id;
+        const name = this.dataset.name;
+
+        document.getElementById('editExcelId').value = id;
+        document.getElementById('editFileName').value = name;
+
+        // Set the download link
+        const downloadBtn = document.getElementById('downloadExcelBtn');
+        if (downloadBtn) {
+        downloadBtn.href = `/Student/DownloadExcelFile/${id}`;
+        }
+
+        editModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        });
         });
     </script>
 

@@ -18,12 +18,6 @@ namespace GathalaMFS.Controllers
             _context = context;
         }
 
-        //public async Task<IActionResult> Index()
-        //{
-        //    var data = await _context.StudentDetails.ToListAsync();
-        //    return View(data);
-        //}
-
         public async Task<IActionResult> Index(int Id)
         {
             var data = await _context.ExcelFileStudents 
@@ -34,48 +28,6 @@ namespace GathalaMFS.Controllers
 
             return View(data);
         }
-
-        //[HttpPost]
-        //public async Task<IActionResult> Upload(IFormFile file)
-        //{
-        //    if (file == null || file.Length == 0)
-        //        return Content("File not selected");
-
-        //    var list = new List<StudentDetail>();
-
-        //    using (var stream = new MemoryStream())
-        //    {
-        //        await file.CopyToAsync(stream);
-
-        //        using (var package = new ExcelPackage(stream))
-        //        {
-        //            var worksheet = package.Workbook.Worksheets[0];
-
-        //            if (worksheet == null)
-        //                return Content("No sheet found in Excel");
-
-        //            int rowCount = worksheet.Dimension.Rows;
-
-        //            for (int row = 2; row <= rowCount; row++)
-        //            {
-        //                list.Add(new StudentDetail
-        //                {
-        //                    CandidateName = worksheet.Cells[row, 1].Value?.ToString(),
-        //                    FatherName = worksheet.Cells[row, 2].Value?.ToString(),
-        //                    CourseName = worksheet.Cells[row, 3].Value?.ToString(),
-        //                    Duration = worksheet.Cells[row, 4].Value?.ToString(),
-        //                    InstituteName = worksheet.Cells[row, 5].Value?.ToString(),
-        //                    CreatedDate = DateTime.Now
-        //                });
-        //            }
-        //        }
-        //    }
-
-        //    _context.StudentDetails.AddRange(list);
-        //    await _context.SaveChangesAsync();
-
-        //    return RedirectToAction("Index");
-        //}
         public IActionResult Download(int id)
         {
             var student = _context.StudentDetails.FirstOrDefault(x => x.Id == id);
@@ -118,8 +70,29 @@ namespace GathalaMFS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UploadExcel(IFormFile file)
+        public async Task<IActionResult> UploadExcel(IFormFile file, string InputFileName)
         {
+            string finalFileName = InputFileName?.Trim();
+
+            if (string.IsNullOrWhiteSpace(finalFileName))
+            {
+                finalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+            }
+
+            // CHECK DUPLICATE FILE NAME
+            bool alreadyExists = await _context.ExcelFiles
+                .AnyAsync(x => x.FileName == finalFileName);
+
+            if (alreadyExists)
+            {
+                //// Optional: delete uploaded physical file
+                //if (System.IO.File.Exists(filePath))
+                //    System.IO.File.Delete(filePath);
+
+                TempData["Error"] = $"File name '{finalFileName}' already exists. Please use a different name.";
+
+                return RedirectToAction("ExcelUpload");
+            }
             if (file == null || file.Length == 0)
                 return RedirectToAction("Index");
 
@@ -128,7 +101,10 @@ namespace GathalaMFS.Controllers
             if (!Directory.Exists(uploads))
                 Directory.CreateDirectory(uploads);
 
-            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+            //var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+            //var filePath = Path.Combine(uploads, fileName);
+            var extension = Path.GetExtension(file.FileName);
+            var fileName = $"File_{DateTime.Now:yyyyMMdd_HHmmss}{extension}";
             var filePath = Path.Combine(uploads, fileName);
 
             // 1. SAVE FILE PHYSICALLY
@@ -168,6 +144,21 @@ namespace GathalaMFS.Controllers
                 }
             }
 
+            var duplicateInExcel = list
+    .GroupBy(x => x.CandidateId)
+    .Where(g => g.Count() > 1)
+    .Select(g => g.Key)
+    .ToList();
+
+            if (duplicateInExcel.Any())
+            {
+                if (System.IO.File.Exists(filePath))
+                    System.IO.File.Delete(filePath);
+
+                TempData["Error"] = $"Duplicate CandidateId found in Excel: {string.Join(", ", duplicateInExcel)}";
+
+                return RedirectToAction("ExcelUpload");
+            }
             // ✅ CHECK LIMIT BEFORE INSERT
             int currentCount = await _context.StudentDetails.CountAsync();
 
@@ -179,7 +170,7 @@ namespace GathalaMFS.Controllers
                 if (System.IO.File.Exists(filePath))
                     System.IO.File.Delete(filePath);
 
-                TempData["Error"] = $"Cannot upload file. Only {remaining} student slots remaining (Max 250).";
+                TempData["Error"] = $"Cannot upload file. Only {remaining} student slots remaining (Max 300).";
                 return RedirectToAction("ExcelUpload");
             }
 
@@ -190,7 +181,7 @@ namespace GathalaMFS.Controllers
             // 4. SAVE EXCEL FILE RECORD    
             var excelFile = new ExcelFile
             {
-                FileName = file.FileName,
+                FileName = finalFileName,
                 FilePath = "/uploads/" + fileName,
                 UploadedDate = DateTime.Now,
                 RecordCount = list.Count
@@ -231,95 +222,212 @@ namespace GathalaMFS.Controllers
                 worksheet.Cells["A1:F1"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
                 worksheet.Cells["A1:F1"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
 
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
                 var stream = new MemoryStream(package.GetAsByteArray());
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "StudentTemplate.xlsx");
             }
         }
 
-        //public IActionResult BulkUpload()
-        //{
-        //    return View();
-        //}
+        [HttpPost]
+        public async Task<IActionResult> EditExcel(int Id, string FileName, IFormFile file)
+        {
+            var excel = await _context.ExcelFiles
+                .FirstOrDefaultAsync(x => x.Id == Id);
 
-        //[HttpPost]
-        //public async Task<IActionResult> PreviewUpload(IFormFile file)
-        //{
-        //    if (file == null || file.Length == 0)
-        //        return Json(new { success = false, message = "File not selected" });
+            if (excel == null)
+                return NotFound();
 
-        //    var previewData = new List<Dictionary<string, string>>();
+            bool alreadyExists = await _context.ExcelFiles
+        .AnyAsync(x => x.FileName == FileName && x.Id != Id);
 
-        //    using (var stream = new MemoryStream())
-        //    {
-        //        await file.CopyToAsync(stream);
+            if (alreadyExists)
+            {
+                TempData["Error"] = $"File name '{FileName}' already exists. Please use different name.";
+                return RedirectToAction("ExcelUpload");
+            }
 
-        //        using (var package = new ExcelPackage(stream))
-        //        {
-        //            var worksheet = package.Workbook.Worksheets[0];
+            // 1. UPDATE FILE IF NEW UPLOADED
+            if (file != null && file.Length > 0)
+            {
+                var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
 
-        //            if (worksheet == null)
-        //                return Json(new { success = false, message = "No sheet found in Excel" });
+                if (!Directory.Exists(uploads))
+                    Directory.CreateDirectory(uploads);
 
-        //            int rowCount = worksheet.Dimension.Rows;
-        //            int colCount = worksheet.Dimension.Columns;
+                var extension = Path.GetExtension(file.FileName);
+                var newFileName = $"File_{DateTime.Now:yyyyMMdd_HHmmssfff}{extension}";
+                var filePath = Path.Combine(uploads, newFileName);
 
-        //            for (int row = 2; row <= rowCount; row++)
-        //            {
-        //                var rowData = new Dictionary<string, string>();
-        //                for (int col = 1; col <= colCount; col++)
-        //                {
-        //                    var header = worksheet.Cells[1, col].Value?.ToString() ?? $"Column{col}";
-        //                    var value = worksheet.Cells[row, col].Value?.ToString() ?? "";
-        //                    rowData[header] = value;
-        //                }
-        //                previewData.Add(rowData);
-        //            }
-        //        }
-        //    }
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
 
-        //    return Json(new { success = true, data = previewData, count = previewData.Count });
-        //}
+                // delete old file
+                if (!string.IsNullOrEmpty(excel.FilePath))
+                {
+                    var oldPath = Path.Combine(
+                        Directory.GetCurrentDirectory(),
+                        "wwwroot",
+                        excel.FilePath.TrimStart('/')
+                    );
 
-        //[HttpPost]
-        //public async Task<IActionResult> ConfirmUpload(IFormFile file)
-        //{
-        //    if (file == null || file.Length == 0)
-        //        return Json(new { success = false, message = "File not selected" });
+                    if (System.IO.File.Exists(oldPath))
+                        System.IO.File.Delete(oldPath);
+                }
 
-        //    var list = new List<StudentDetail>();
+                excel.FilePath = "/uploads/" + newFileName;
+            }
 
-        //    using (var stream = new MemoryStream())
-        //    {
-        //        await file.CopyToAsync(stream);
+            excel.FileName = FileName;
+            excel.UploadedDate = DateTime.Now;
 
-        //        using (var package = new ExcelPackage(stream))
-        //        {
-        //            var worksheet = package.Workbook.Worksheets[0];
+            await _context.SaveChangesAsync();
 
-        //            if (worksheet == null)
-        //                return Json(new { success = false, message = "No sheet found in Excel" });
+            // 2. DELETE OLD MAPPINGS + STUDENTS (IMPORTANT FIX)
+            var oldMappings = await _context.ExcelFileStudents
+                .Where(x => x.ExcelFileId == excel.Id)
+                .ToListAsync();
 
-        //            int rowCount = worksheet.Dimension.Rows;
+            var oldStudentIds = oldMappings.Select(x => x.StudentId).ToList();
 
-        //            for (int row = 2; row <= rowCount; row++)
-        //            {
-        //                list.Add(new StudentDetail
-        //                {
-        //                    CandidateName = worksheet.Cells[row, 1].Value?.ToString(),
-        //                    FatherName = worksheet.Cells[row, 2].Value?.ToString(),
-        //                    CourseName = worksheet.Cells[row, 3].Value?.ToString(),
-        //                    Duration = worksheet.Cells[row, 4].Value?.ToString(),
-        //                    InstituteName = worksheet.Cells[row, 5].Value?.ToString(),
-        //                    CreatedDate = DateTime.Now
-        //                });
-        //            }
-        //        }
-        //    }
+            _context.ExcelFileStudents.RemoveRange(oldMappings);
 
-        //    _context.StudentDetails.AddRange(list);
-        //    await _context.SaveChangesAsync();
+            var oldStudents = await _context.StudentDetails
+                .Where(x => oldStudentIds.Contains(x.Id))
+                .ToListAsync();
 
-        //    return Json(new { success = true, message = $"{list.Count} records imported successfully" });
-        //}
+            _context.StudentDetails.RemoveRange(oldStudents);
+
+            await _context.SaveChangesAsync();
+
+            // 3. RE-IMPORT NEW EXCEL DATA
+            var list = new List<StudentDetail>();
+
+            using (var package = new ExcelPackage(new FileInfo(
+                Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", excel.FilePath.TrimStart('/'))
+            )))
+            {
+                var worksheet = package.Workbook.Worksheets[0];
+
+                if (worksheet == null)
+                    return Content("No sheet found");
+
+                int rowCount = worksheet.Dimension.Rows;
+
+                for (int row = 2; row <= rowCount; row++)
+                {
+                    int candidateId = 0;
+                    int.TryParse(worksheet.Cells[row, 1].Value?.ToString(), out candidateId);
+
+                    list.Add(new StudentDetail
+                    {
+                        CandidateId = candidateId,
+                        CandidateName = worksheet.Cells[row, 2].Value?.ToString(),
+                        FatherName = worksheet.Cells[row, 3].Value?.ToString(),
+                        CourseName = worksheet.Cells[row, 4].Value?.ToString(),
+                        Duration = worksheet.Cells[row, 5].Value?.ToString(),
+                        InstituteName = worksheet.Cells[row, 6].Value?.ToString(),
+                        CreatedDate = DateTime.Now
+                    });
+                }
+            }
+            var duplicateInExcel = list
+            .GroupBy(x => x.CandidateId)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+
+            if (duplicateInExcel.Any())
+            {
+                TempData["Error"] = $"Duplicate CandidateId found in Excel: {string.Join(", ", duplicateInExcel)}";
+                return RedirectToAction("ExcelUpload");
+            }
+
+            int currentCount = await _context.StudentDetails.CountAsync();
+
+            if (currentCount + list.Count > 300)
+            {
+                int remaining = 300 - currentCount;
+
+                TempData["Error"] = $"Cannot upload file. Only {remaining} student slots remaining (Max 300).";
+                return RedirectToAction("ExcelUpload");
+            }
+            // 4. SAVE NEW STUDENTS
+            _context.StudentDetails.AddRange(list);
+            await _context.SaveChangesAsync();
+
+            // 5. RECREATE MAPPINGS
+            var mappings = list.Select(s => new ExcelFileStudent
+            {
+                ExcelFileId = excel.Id,
+                StudentId = s.Id
+            }).ToList();
+
+            _context.ExcelFileStudents.AddRange(mappings);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Excel file and student data updated successfully.";
+
+            return RedirectToAction("ExcelUpload");
+        }
+
+        public async Task<IActionResult> DownloadExcelFile(int id)
+        {
+            var excelFile = await _context.ExcelFiles
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (excelFile == null)
+                return NotFound();
+
+            // Get all students associated with this Excel file
+            var mappings = await _context.ExcelFileStudents
+                .Include(x => x.Student)
+                .Where(x => x.ExcelFileId == id)
+                .ToListAsync();
+
+            var students = mappings.Select(m => m.Student).ToList();
+
+            // Create Excel package
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("StudentData");
+
+                // Add headers
+                worksheet.Cells["A1"].Value = "CandidateId";
+                worksheet.Cells["B1"].Value = "CandidateName";
+                worksheet.Cells["C1"].Value = "FatherName";
+                worksheet.Cells["D1"].Value = "CourseName";
+                worksheet.Cells["E1"].Value = "Duration";
+                worksheet.Cells["F1"].Value = "InstituteName";
+
+                // Style headers
+                worksheet.Cells["A1:F1"].Style.Font.Bold = true;
+                worksheet.Cells["A1:F1"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                worksheet.Cells["A1:F1"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
+
+                // Add data
+                int row = 2;
+                foreach (var student in students)
+                {
+                    worksheet.Cells[row, 1].Value = student.CandidateId;
+                    worksheet.Cells[row, 2].Value = student.CandidateName;
+                    worksheet.Cells[row, 3].Value = student.FatherName;
+                    worksheet.Cells[row, 4].Value = student.CourseName;
+                    worksheet.Cells[row, 5].Value = student.Duration;
+                    worksheet.Cells[row, 6].Value = student.InstituteName;
+                    row++;
+                }
+
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                var stream = new MemoryStream(package.GetAsByteArray());
+                string fileName = $"{excelFile.FileName}_Backup_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+        }
     }
 }
