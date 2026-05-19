@@ -44,8 +44,15 @@
             }
 
             img {
-                width: 150px;
-                height: 150px;
+                width: 100px;
+                height: 100px;
+            }
+
+            .qr-text {
+                margin-top: 8px;
+                font-size: 14px;
+                font-weight: bold;
+                text-align: center;
             }
 
             @@media print {
@@ -68,6 +75,9 @@
     <div class="a4-page">
 
         <img src="data:image/png;base64,@ViewBag.QRCodeImage" />
+<div class="qr-text">
+            Scan QR code to verify details
+        </div>
     </div>
 
     <script>

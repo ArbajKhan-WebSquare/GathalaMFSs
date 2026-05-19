@@ -13,8 +13,13 @@ namespace GathalaMFS.Controllers
             _context = context;
         }
 
+        [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Index()
         {
+            if (HttpContext.Session.GetString("User") != null)
+            {
+                return RedirectToAction("ExcelUpload", "Student");
+            }
             return View();
         }
 

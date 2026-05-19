@@ -325,9 +325,9 @@
                 font-size: 0.93rem;
                 font-weight: 600;
                 color: var(--text-head);
-                white-space: nowrap;
+                /* white-space: nowrap;
                 overflow: hidden;
-                text-overflow: ellipsis;
+                text-overflow: ellipsis; */
             }
 
             /* special badges */
@@ -442,10 +442,19 @@
                     font-size: 1.15rem;
                 }
             }
-            img{
-                height: 120px;
-                width: 520px;
+
+            .sd-header {
+                width: 100%;
+                overflow: hidden;
+                border-radius: 18px 18px 0 0;
             }
+
+                .sd-header img {
+                    width: 100%;
+                    height: auto;
+                    display: block;
+                    object-fit: cover;
+                }
     </style>
 </head>
 <body>

@@ -1,13 +1,12 @@
 ﻿@model IEnumerable<GathalaMFS.Models.ExcelFileStudent>
-
 @{
-    ViewData["Title"] = "Student Detail List";
     Layout = null;
 }
 
 <!-- ════════════════════════════════════════════
      FONTS & ICONS
 ════════════════════════════════════════════ -->
+<title> Student List | QR Code System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -626,18 +625,19 @@
 
     <!-- Header -->
     <div class="sl-header">
-        <div class="sl-header-icon">
+        <div class="sl-header-icon" onclick="history.back()" style="cursor:pointer;">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 3C9.24 3 7 5.24 7 8s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 12c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4z" />
             </svg>
         </div>
+
         <div class="sl-heading">
             <span>Management System</span>
             Student List
         </div>
     </div>
 
-    @if (TempData["Success"] != null)
+    @* @if (TempData["Success"] != null)
     {
         <div class="sl-alert sl-alert-success">
             <i class="fa-solid fa-circle-check"></i> @TempData["Success"]
@@ -648,7 +648,7 @@
         <div class="sl-alert sl-alert-error">
             <i class="fa-solid fa-circle-xmark"></i> @TempData["Error"]
         </div>
-    }
+    } *@
 
     <!-- Main card -->
     <div class="sl-card">
